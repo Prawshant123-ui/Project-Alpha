@@ -1,0 +1,6 @@
+Server/node_modules
+Server/.env
+Server/dist
+Server/build
+
+

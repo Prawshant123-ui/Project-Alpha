@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "typeRoots": ["./node_modules/@types", "./src/types"],
     /* Project */
     "rootDir": "./src",
     "outDir": "./dist",
@@ -29,11 +30,13 @@
 
     /* Performance */
     "skipLibCheck": true
+    
   },
 
   "include": [
     "src/**/*",
-    "prisma/**/*"
+    "prisma/**/*",
+    "src/**/*.d.ts", "src/**/*.ts"
   ],
 
   "exclude": [

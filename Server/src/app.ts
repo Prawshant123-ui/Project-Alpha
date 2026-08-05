@@ -3,6 +3,7 @@ import cors from "cors";
 import { httpLogger } from "../src/middlewares/loggerMiddleware.js";
 import { env } from "../src/config/env.js"
 import helmet from "helmet"
+import { apiLimiter } from "./utils/rateLimiter.js";
 
 
 
@@ -30,5 +31,6 @@ app.get("/api/health", (req, res) => {
 app.use(httpLogger);
 
 app.use(express.json());
+app.use(apiLimiter);
 app.use(express.urlencoded({ extended: true }));
 

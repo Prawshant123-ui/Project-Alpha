@@ -4,14 +4,13 @@ import { httpLogger } from "../src/middlewares/loggerMiddleware.js";
 import { env } from "../src/config/env.js"
 import helmet from "helmet"
 import { apiLimiter } from "./utils/rateLimiter.js";
+import authRoute from "../src/routes/authRoute.js"
 
 
 
 export const app = express();
+
 app.use(helmet());
-
-
-
 
 app.use(cors({
   origin: env.CLIENT_URL || "http://localhost:3000",
@@ -19,6 +18,12 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
+
+app.use(httpLogger);
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(apiLimiter);
 
 app.get("/", (req, res) => {
   res.json({ success: true, message: "Project-Alpha API" });
@@ -28,9 +33,4 @@ app.get("/api/health", (req, res) => {
   res.status(200).json({ success: true, message: "Server is running" });
 });
 
-app.use(httpLogger);
-
-app.use(express.json());
-app.use(apiLimiter);
-app.use(express.urlencoded({ extended: true }));
-
+app.use('/api/auth', authRoute)

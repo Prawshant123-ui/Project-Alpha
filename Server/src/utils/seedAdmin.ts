@@ -6,7 +6,8 @@ import { logger } from "../config/logger.js"
 export const seedAdmin = async () => {
     try {
         const { ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_NAME, SALT_ROUNDS } = env
-        if (!ADMIN_EMAIL || !ADMIN_NAME || !ADMIN_PASSWORD || !SALT_ROUNDS) {
+
+        if (!ADMIN_EMAIL || !ADMIN_NAME || !ADMIN_PASSWORD) {
             logger.error("Missing admin credentials!!")
             process.exit(1);
         }

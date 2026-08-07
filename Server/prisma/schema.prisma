@@ -27,3 +27,15 @@ model User {
   role      Role     @default(STUDENT)
   createdAt DateTime @default(now())
 }
+
+model Card {
+  id String @id @default(uuid())
+  title String
+  subject String
+  description String
+  domain String            // Engineering, Medical,IT, Music, arts etc
+  thumbnail_imageUrl String
+  video_lectureUrl String
+  note_pdfUrl String
+
+}

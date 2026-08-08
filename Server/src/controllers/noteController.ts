@@ -6,7 +6,7 @@ import { uploadToCloudinary } from "../utils/cloudinaryUpload.js";
 const createNotes = async (req: Request, res: Response) => {
   try {
     const { title, subject, description, domain } = req.body;
-    const teacherId = req.user?.id; // assuming your auth middleware attaches `user` to req
+    const teacherId = req.user?.id; 
 
     const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
 

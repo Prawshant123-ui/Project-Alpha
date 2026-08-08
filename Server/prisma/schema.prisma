@@ -13,7 +13,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role{
+enum Role {
   STUDENT
   MENTOR
   ADMIN
@@ -26,16 +26,27 @@ model User {
   password  String
   role      Role     @default(STUDENT)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  notes Note[]
 }
 
-model Card {
-  id String @id @default(uuid())
-  title String
-  subject String
-  description String
-  domain String            // Engineering, Medical,IT, Music, arts etc
-  thumbnail_imageUrl String
-  video_lectureUrl String
-  note_pdfUrl String
+model Note {
+  id                String  @id @default(uuid())
+  title             String
+  subject           String
+  description       String
+  domain            String
+  thumbnailImageUrl String?
+  notePdfUrl        String?
 
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([authorId])
+  @@index([subject])
+  @@index([domain])
 }

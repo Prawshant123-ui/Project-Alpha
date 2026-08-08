@@ -38,6 +38,7 @@ model Note {
   description       String
   domain            String
   thumbnailImageUrl String?
+  videoUrl          String?
   notePdfUrl        String?
 
   authorId String

@@ -1,15 +1,49 @@
-import type {Request,Response} from "express"
-import {prisma} from "../config/prisma.js"
-import {logger} from "../config/logger.js"
-import {signToken,verifyToken} from "../utils/jwt.js"
+import type { Request, Response } from "express";
+import { prisma } from "../config/prisma.js";
+import { logger } from "../config/logger.js";
+import { uploadToCloudinary } from "../utils/cloudinaryUpload.js";
 
-const createNotes=async(req:Request,res:Response)=>{
-    try {
-        const {title,subject,description,domain,thumbnailImageUrl,videoUrl,notePdfUrl}=req.body
+const createNotes = async (req: Request, res: Response) => {
+  try {
+    const { title, subject, description, domain } = req.body;
+    const teacherId = req.user?.id; // assuming your auth middleware attaches `user` to req
 
-        
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
 
-    } catch (error) {
-        
+    const notePdfFile = files?.notePdfUrl?.[0];
+    const thumbnailImageFile = files?.thumbnailImageUrl?.[0];
+    const videoFile = files?.videoUrl?.[0];
+
+    if (!title || !subject || !description || !domain || !teacherId) {
+      logger.warn({ title, subject, domain, teacherId }, "Missing required fields for course creation");
+      return res.status(400).json({ message: "Title, subject, description, domain are required" });
     }
-}
+
+    const [notePdfResult, thumbnailResult, videoResult] = await Promise.all([
+      notePdfFile ? uploadToCloudinary(notePdfFile.buffer, "courses/pdfs", "raw") : Promise.resolve(null),
+      thumbnailImageFile ? uploadToCloudinary(thumbnailImageFile.buffer, "courses/thumbnails", "image") : Promise.resolve(null),
+      videoFile ? uploadToCloudinary(videoFile.buffer, "courses/videos", "video") : Promise.resolve(null),
+    ]);
+
+    const course = await prisma.course.create({
+      data: {
+        title,
+        subject,
+        description,
+        domain,
+        teacherId,
+        notePdfUrl: notePdfResult?.secure_url ?? null,
+        thumbnailImageUrl: thumbnailResult?.secure_url ?? null,
+        videoUrl: videoResult?.secure_url ?? null,
+      },
+    });
+
+    logger.info({ courseId: course.id }, "Course created successfully");
+    return res.status(201).json({ message: "Course created", course });
+  } catch (error) {
+    logger.error({ err: error }, "Failed to create course");
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export { createNotes };

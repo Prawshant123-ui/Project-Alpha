@@ -114,5 +114,76 @@ const getAllCourse = async (req: Request, res: Response) => {
 };
 
 
+const getCourseById = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      logger.warn("Unauthorized request to get course");
+
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+
+    const courseId = req.params.id;
+
+    if (!courseId) {
+      logger.warn(
+        { userId: req.user.id },
+        "Course ID is missing"
+      );
+
+      return res.status(400).json({
+        message: "Course ID is required",
+      });
+    }
+
+    const course = await prisma.course.findFirst({
+      where: {
+        id: courseId,
+        userId: req.user.id,
+      },
+    });
+
+    if (!course) {
+      logger.warn(
+        {
+          courseId,
+          userId: req.user.id,
+        },
+        "Course not found"
+      );
+
+      return res.status(404).json({
+        message: "Course not found",
+      });
+    }
+
+    logger.info(
+      {
+        courseId,
+        userId: req.user.id,
+      },
+      "Course fetched successfully"
+    );
+
+    return res.status(200).json({
+      message: "Course fetched successfully",
+      data: course,
+    });
+  } catch (error) {
+    logger.error(
+      {
+        error,
+        courseId: req.params.id,
+        userId: req.user?.id,
+      },
+      "Failed to fetch course"
+    );
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
 
 export { createCourse, getAllCourse };

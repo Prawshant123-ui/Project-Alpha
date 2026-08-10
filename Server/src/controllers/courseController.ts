@@ -124,7 +124,7 @@ const getCourseById = async (req: Request, res: Response) => {
       });
     }
 
-    const courseId = req.params.id;
+    const courseId = req.params.id as string;
 
     if (!courseId) {
       logger.warn(
@@ -186,4 +186,4 @@ const getCourseById = async (req: Request, res: Response) => {
   }
 };
 
-export { createCourse, getAllCourse };
+export { createCourse, getAllCourse,getCourseById};

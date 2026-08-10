@@ -3,10 +3,10 @@ import { prisma } from "../config/prisma.js";
 import { logger } from "../config/logger.js";
 import { uploadToCloudinary } from "../utils/cloudinaryUpload.js";
 
-const createNotes = async (req: Request, res: Response) => {
+const createCourse = async (req: Request, res: Response) => {
   try {
     const { title, subject, description, domain } = req.body;
-    const teacherId = req.user?.id; 
+    const teacherId = req.user?.id;
 
     const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
 
@@ -46,4 +46,73 @@ const createNotes = async (req: Request, res: Response) => {
   }
 };
 
-export { createNotes };
+const getAllCourse = async (req: Request, res: Response) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+
+    const skip = (page - 1) * limit;
+
+    logger.info(
+      {
+        page,
+        limit,
+        skip,
+      },
+      "Fetching courses"
+    );
+
+    const [courses, totalCourses] = await Promise.all([
+      prisma.course.findMany({
+        skip,
+        take: limit,
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
+      prisma.course.count(),
+    ]);
+
+    const totalPages = Math.ceil(totalCourses / limit);
+
+    logger.info(
+      {
+        page,
+        limit,
+        coursesFetched: courses.length,
+        totalCourses,
+        totalPages,
+      },
+      "Courses fetched successfully"
+    );
+
+    res.status(200).json({
+      success: true,
+      data: courses,
+      pagination: {
+        currentPage: page,
+        limit,
+        totalItems: totalCourses,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    });
+  } catch (error) {
+    logger.error(
+      {
+        error,
+      },
+      "Failed to fetch courses"
+    );
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch courses",
+    });
+  }
+};
+
+
+
+export { createCourse, getAllCourse };

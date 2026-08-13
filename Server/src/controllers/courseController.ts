@@ -186,4 +186,164 @@ const getCourseById = async (req: Request, res: Response) => {
   }
 };
 
-export { createCourse, getAllCourse,getCourseById};
+const searchCourse = async (req: Request, res: Response) => {
+  try {
+    const keyword = req.query.q as string | undefined;
+
+    if (!keyword) {
+      return res.status(400).json({ message: "Search keyword is required" });
+    }
+
+    const course = await prisma.course.findMany({
+      where: {
+        userId: req.user?.id,
+        title: {
+          contains: keyword,
+          mode: "insensitive",
+        },
+      },
+    });
+
+    return res.status(200).json(course);
+  } catch (error) {
+    logger.error({ error }, "Failed to search courses");
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+const getCoursesByDomain = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const domain = req.params.domain as string;
+
+    const course = await prisma.course.findMany({
+      where: {
+        domain,
+        teacherId: req.user.id,
+      },
+    });
+
+    return res.status(200).json({
+      message: "Courses fetched successfully",
+      data: course,
+    });
+  } catch (error) {
+    logger.error({ error }, "Failed to fetch courses by domain");
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
+const updateCourse = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const courseId = req.params.id as string;
+
+    if (!courseId) {
+      return res.status(400).json({ message: "Course ID is required" });
+    }
+
+    const existingCourse = await prisma.course.findFirst({
+      where: {
+        id: courseId,
+        teacherId: req.user.id,
+      },
+    });
+
+    if (!existingCourse) {
+      logger.warn(
+        { courseId, userId: req.user.id },
+        "Course not found or not owned by user"
+      );
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    const { title, subject, description, domain } = req.body;
+
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+    const notePdfFile = files?.notePdfUrl?.[0];
+    const thumbnailImageFile = files?.thumbnailImageUrl?.[0];
+    const videoFile = files?.videoUrl?.[0];
+
+    const [notePdfResult, thumbnailResult, videoResult] = await Promise.all([
+      notePdfFile ? uploadToCloudinary(notePdfFile.buffer, "courses/pdf", "raw") : Promise.resolve(null),
+      thumbnailImageFile ? uploadToCloudinary(thumbnailImageFile.buffer, "courses/thumbnails", "image") : Promise.resolve(null),
+      videoFile ? uploadToCloudinary(videoFile.buffer, "courses/videos", "video") : Promise.resolve(null),
+    ]);
+
+    const updatedCourse = await prisma.course.update({
+      where: { id: courseId },
+      data: {
+        ...(title && { title }),
+        ...(subject && { subject }),
+        ...(description && { description }),
+        ...(domain && { domain }),
+        ...(notePdfResult && { notePdfUrl: notePdfResult.secure_url }),
+        ...(thumbnailResult && { thumbnailImageUrl: thumbnailResult.secure_url }),
+        ...(videoResult && { videoUrl: videoResult.secure_url }),
+      },
+    });
+
+    logger.info({ courseId, userId: req.user.id }, "Course updated successfully");
+
+    return res.status(200).json({
+      message: "Course updated successfully",
+      data: updatedCourse,
+    });
+  } catch (error) {
+    logger.error({ error, courseId: req.params.id, userId: req.user?.id }, "Failed to update course");
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const deleteCourse = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const courseId = req.params.id as string;
+
+    if (!courseId) {
+      return res.status(400).json({ message: "Course ID is required" });
+    }
+
+    const existingCourse = await prisma.course.findFirst({
+      where: {
+        id: courseId,
+        teacherId: req.user.id,
+      },
+    });
+
+    if (!existingCourse) {
+      logger.warn(
+        { courseId, userId: req.user.id },
+        "Course not found or not owned by user"
+      );
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    await prisma.course.delete({
+      where: { id: courseId },
+    });
+
+    logger.info({ courseId, userId: req.user.id }, "Course deleted successfully");
+
+    return res.status(200).json({
+      message: "Course deleted successfully",
+    });
+  } catch (error) {
+    logger.error({ error, courseId: req.params.id, userId: req.user?.id }, "Failed to delete course");
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export { createCourse, getAllCourse, getCourseById, updateCourse, deleteCourse, searchCourse, getCoursesByDomain };

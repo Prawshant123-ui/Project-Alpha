@@ -20,7 +20,7 @@ const createCourse = async (req: Request, res: Response) => {
     }
 
     const [notePdfResult, thumbnailResult, videoResult] = await Promise.all([
-      notePdfFile ? uploadToCloudinary(notePdfFile.buffer, "courses/pdfs", "raw") : Promise.resolve(null),
+      notePdfFile ? uploadToCloudinary(notePdfFile.buffer, "courses/pdf", "raw") : Promise.resolve(null),
       thumbnailImageFile ? uploadToCloudinary(thumbnailImageFile.buffer, "courses/thumbnails", "image") : Promise.resolve(null),
       videoFile ? uploadToCloudinary(videoFile.buffer, "courses/videos", "video") : Promise.resolve(null),
     ]);

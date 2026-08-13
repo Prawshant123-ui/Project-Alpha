@@ -5,6 +5,8 @@ import { env } from "../src/config/env.js"
 import helmet from "helmet"
 import { apiLimiter } from "./utils/rateLimiter.js";
 import authRoute from "../src/routes/authRoute.js"
+import courseRoute from "../src/routes/courseRoute.js"
+import adminRoute from "../src/routes/adminRoute.js"
 
 
 
@@ -34,3 +36,5 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use('/api/auth', authRoute)
+app.use("/api/courses", courseRoute);
+app.use("/api/admin", adminRoute);

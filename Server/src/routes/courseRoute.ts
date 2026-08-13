@@ -2,7 +2,7 @@ import { Router } from "express";
 import { protect } from "../middlewares/authMiddleware.js";
 import { authorize } from "../middlewares/roleMiddleware.js";
 import { upload } from "../middlewares/uploadMiddleware.js";
-import { validateRequest } from "../middlewares/validateRequest.js";
+import { validateRequest } from "../validators/validate.js"
 import {
   createCourseValidator,
   updateCourseValidator,
@@ -27,7 +27,7 @@ const courseFileUpload = upload.fields([
   { name: "videoUrl", maxCount: 1 },
 ]);
 
-// Public / any authenticated user
+
 router.get("/", protect, getAllCourse);
 router.get("/search", protect, searchCourseValidator, validateRequest, searchCourse);
 router.get("/domain/:domain", protect, getCoursesByDomain);

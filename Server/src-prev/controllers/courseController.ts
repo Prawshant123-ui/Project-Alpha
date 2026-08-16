@@ -137,8 +137,11 @@ const getCourseById = async (req: Request, res: Response) => {
       });
     }
 
-    const course = await prisma.course.findUnique({
-      where: { id: courseId },
+    const course = await prisma.course.findFirst({
+      where: {
+        id: courseId,
+        userId: req.user.id,
+      },
     });
 
     if (!course) {
@@ -193,6 +196,7 @@ const searchCourse = async (req: Request, res: Response) => {
 
     const course = await prisma.course.findMany({
       where: {
+        userId: req.user?.id,
         title: {
           contains: keyword,
           mode: "insensitive",
@@ -217,7 +221,10 @@ const getCoursesByDomain = async (req: Request, res: Response) => {
     const domain = req.params.domain as string;
 
     const course = await prisma.course.findMany({
-      where: { domain },
+      where: {
+        domain,
+        teacherId: req.user.id,
+      },
     });
 
     return res.status(200).json({

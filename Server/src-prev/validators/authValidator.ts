@@ -20,6 +20,10 @@ const registerValidator = [
     .matches(/[a-z]/).withMessage("Must contain at least one lowercase letter")
     .matches(/[0-9]/).withMessage("Must contain at least one number")
     .matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage("Must contain at least one special character"),
+  body("phone")
+    .notEmpty().withMessage("Phone number is required")
+
+
 ];
 
 const loginValidator = [

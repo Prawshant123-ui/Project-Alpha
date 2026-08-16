@@ -7,8 +7,6 @@ import { apiLimiter } from "./utils/rateLimiter.js";
 import authRoute from "../src/routes/authRoute.js"
 import courseRoute from "../src/routes/courseRoute.js"
 import adminRoute from "../src/routes/adminRoute.js"
-import quizRoute from "../src/routes/quizRoute.js"
-import resultRoute from "../src/routes/resultRoute.js"
 
 
 
@@ -40,5 +38,3 @@ app.get("/api/health", (req, res) => {
 app.use('/api/auth', authRoute)
 app.use("/api/courses", courseRoute);
 app.use("/api/admin", adminRoute);
-app.use("/api/quizzes", quizRoute);
-app.use("/api/results", resultRoute);

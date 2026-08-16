@@ -25,7 +25,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  courses Course[]
+  courses      Course[]
+  quizAttempts QuizAttempt[]
 }
 
 model Course {
@@ -37,14 +38,64 @@ model Course {
   thumbnailImageUrl String?
   videoUrl          String?
   notePdfUrl        String?
-   quiz Quiz?
 
   teacherId String
   teacher   User   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
+  quiz Quiz?
+
   @@index([teacherId])
   @@index([subject])
   @@index([domain])
+}
+
+model Quiz {
+  id        String   @id @default(uuid())
+  courseId  String   @unique
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title     String?
+  createdAt DateTime @default(now())
+
+  questions Question[]
+  attempts  QuizAttempt[]
+}
+
+model Question {
+  id        String   @id @default(uuid())
+  quizId    String
+  quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  text      String
+  createdAt DateTime @default(now())
+
+  options Option[]
+
+  @@index([quizId])
+}
+
+model Option {
+  id         String   @id @default(uuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  text       String
+  isCorrect  Boolean  @default(false)
+
+  @@index([questionId])
+}
+
+model QuizAttempt {
+  id             String   @id @default(uuid())
+  quizId         String
+  quiz           Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  studentId      String
+  student        User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  score          Int
+  totalQuestions Int
+  answers        Json
+  attemptedAt    DateTime @default(now())
+
+  @@index([studentId])
+  @@index([quizId])
+  @@index([quizId, studentId, attemptedAt])
 }

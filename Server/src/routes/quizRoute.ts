@@ -22,7 +22,7 @@ import {
 
 const router = Router();
 
-// ---------- Mentor: quiz management ----------
+
 router.post(
   "/course/:courseId",
   protect,
@@ -54,7 +54,7 @@ router.patch(
 
 router.delete("/questions/:questionId", protect, authorize("MENTOR", "ADMIN"), deleteQuestion);
 
-// ---------- Student: take quiz ----------
+
 router.get(
   "/course/:courseId",
   protect,

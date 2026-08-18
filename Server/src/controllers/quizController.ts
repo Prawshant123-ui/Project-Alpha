@@ -121,7 +121,7 @@ const updateQuestion = async (req: Request, res: Response) => {
       if (correctCount !== 1) {
         return res.status(400).json({ message: "Exactly one option must be marked correct" });
       }
-      // Replace all options wholesale — simpler and avoids partial-id mismatches
+      
       await prisma.option.deleteMany({ where: { questionId } });
       await prisma.option.createMany({
         data: options.map((o) => ({ questionId, text: o.text, isCorrect: o.isCorrect })),
@@ -167,9 +167,7 @@ const deleteQuestion = async (req: Request, res: Response) => {
   }
 };
 
-// ---------- STUDENT: TAKE QUIZ ----------
 
-// Get a quiz to take — correct answers are stripped out
 const getQuizForAttempt = async (req: Request, res: Response) => {
   try {
     const courseId = req.params.courseId as string;
@@ -198,12 +196,12 @@ const getQuizForAttempt = async (req: Request, res: Response) => {
   }
 };
 
-// Submit answers, score server-side, store as latest attempt
+
 const submitQuizAttempt = async (req: Request, res: Response) => {
   try {
     const quizId = req.params.quizId as string;
     const studentId = req.user!.id;
-    const { answers } = req.body as { answers: Record<string, string> }; // { questionId: optionId }
+    const { answers } = req.body as { answers: Record<string, string> }; 
 
     const quiz = await prisma.quiz.findUnique({
       where: { id: quizId },

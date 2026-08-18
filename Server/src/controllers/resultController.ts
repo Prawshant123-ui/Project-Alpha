@@ -2,7 +2,6 @@ import type { Request, Response } from "express";
 import { prisma } from "../config/prisma.js";
 import { logger } from "../config/logger.js";
 
-// Helper: latest attempt per student for a given quiz
 const latestAttemptsForQuiz = (quizId: string) =>
   prisma.quizAttempt.findMany({
     where: { quizId },
@@ -11,9 +10,9 @@ const latestAttemptsForQuiz = (quizId: string) =>
     include: { student: { select: { id: true, name: true } } },
   });
 
-// ---------- STUDENT ----------
 
-// Student's own progress: latest score per course they've attempted
+
+
 const getStudentProgress = async (req: Request, res: Response) => {
   try {
     const studentId = req.user!.id;
@@ -44,7 +43,6 @@ const getStudentProgress = async (req: Request, res: Response) => {
   }
 };
 
-// ---------- LEADERBOARD (per course) ----------
 
 const getLeaderboard = async (req: Request, res: Response) => {
   try {
@@ -75,9 +73,9 @@ const getLeaderboard = async (req: Request, res: Response) => {
   }
 };
 
-// ---------- MENTOR ----------
 
-// Teacher's performance dashboard: per-course quiz stats across their own courses
+
+
 const getTeacherDashboard = async (req: Request, res: Response) => {
   try {
     const teacherId = req.user!.id;
@@ -130,9 +128,7 @@ const getTeacherDashboard = async (req: Request, res: Response) => {
   }
 };
 
-// ---------- ADMIN ----------
 
-// ---------- ADMIN ----------
 
 const getAdminDashboard = async (_req: Request, res: Response) => {
   try {
@@ -164,13 +160,13 @@ const getAdminDashboard = async (_req: Request, res: Response) => {
       prisma.quizAttempt.count({ where: { attemptedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } } }),
     ]);
 
-    // Distinct students who have ever attempted a quiz — a proxy for "active learners"
+    
     const distinctAttemptStudents = await prisma.quizAttempt.findMany({
       distinct: ["studentId"],
       select: { studentId: true },
     });
 
-    // Courses grouped by domain — shows which skills are most offered
+    
     const coursesByDomainRaw = await prisma.course.groupBy({
       by: ["domain"],
       _count: { domain: true },
@@ -178,7 +174,7 @@ const getAdminDashboard = async (_req: Request, res: Response) => {
     });
     const coursesByDomain = coursesByDomainRaw.map((d) => ({ domain: d.domain, count: d._count.domain }));
 
-    // Top 5 mentors by number of courses published
+   
     const topMentorsRaw = await prisma.course.groupBy({
       by: ["teacherId"],
       _count: { teacherId: true },
@@ -200,7 +196,7 @@ const getAdminDashboard = async (_req: Request, res: Response) => {
       };
     });
 
-    // Signup trend for the last 14 days — feeds a growth chart on the frontend
+    
     const signupTrendRaw = await prisma.$queryRaw<{ date: Date; count: bigint }[]>`
       SELECT date_trunc('day', "createdAt") as date, COUNT(*)::bigint as count
       FROM "User"
@@ -210,14 +206,14 @@ const getAdminDashboard = async (_req: Request, res: Response) => {
     `;
     const signupTrend = signupTrendRaw.map((row) => ({ date: row.date, count: Number(row.count) }));
 
-    // Platform-wide average quiz score, across all attempts (not just latest)
+    
     const avgScoreRaw = await prisma.$queryRaw<{ avgpct: number | null }[]>`
       SELECT AVG(CASE WHEN "totalQuestions" > 0 THEN (score::float / "totalQuestions") * 100 ELSE NULL END) as avgpct
       FROM "QuizAttempt"
     `;
     const averageScorePct = avgScoreRaw[0]?.avgpct != null ? Math.round(avgScoreRaw[0].avgpct) : null;
 
-    // Recent signups for a quick admin glance
+  
     const recentSignups = await prisma.user.findMany({
       orderBy: { createdAt: "desc" },
       take: 10,
